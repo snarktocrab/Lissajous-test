@@ -31,7 +31,7 @@ class LissajousWindow(qt.QMainWindow):
         super(LissajousWindow, self).__init__()
 
         # Загружаем интерфейс из файла
-        uic.loadUi("main_window.ui", self)
+        uic.loadUi("main_window_dynamic.ui", self)
 
         # Ставим версию и иконку
         with open("version.txt", "r") as f:
@@ -59,16 +59,16 @@ class LissajousWindow(qt.QMainWindow):
         # matplotlib fig в окно Qt.
         self._fc = FigureCanvas(self._fig)
         # Связываем созданный холст c окном
-        self._fc.setParent(self)
+        #self._fc.setParent(self.widget)
+        self.centralwidget.layout().addWidget(self._fc)
+        
         # Настраиваем размер и положение холста
-        self._fc.resize(400, 300)
-        self._fc.move(20, 20)
+        self._fc.setMinimumSize(400, 300)
 
         # Первичное построение фигуры
         self.plot_lissajous_figure()
 
-        self.resize(700, 300)
-
+        #self.resize(700, 300)
         self.plot_button.clicked.connect(self.plot_button_click_handler)
         self.save_button.clicked.connect(self.save_button_click_handler)
 
