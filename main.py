@@ -2,7 +2,7 @@ import sys
 import os
 import PyQt5.QtWidgets as qt
 from PyQt5 import uic, QtGui
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAggBase as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
 import json
@@ -15,7 +15,9 @@ default_settings = {
     "freq_x": 2,
     "freq_y": 3,
     "color": "midnightblue",
-    "width": 2
+    "width": 2,
+    "resolution": 200,
+    "phase_shift": 0
 }
 
 
@@ -38,7 +40,12 @@ class LissajousWindow(qt.QMainWindow):
             version
         ))
         scriptDir = os.path.dirname(os.path.realpath(__file__))
-        self.setWindowIcon(QtGui.QIcon(scriptDir + os.path.sep + "icon.bmp"))
+        icon = QtGui.QIcon()
+        icon.addFile(scriptDir + os.path.sep + "icons" + os.path.sep + "icon_32.bmp")
+        icon.addFile(scriptDir + os.path.sep + "icons" + os.path.sep + "icon_64.bmp")
+        icon.addFile(scriptDir + os.path.sep + "icons" + os.path.sep + "icon_128.bmp")
+        #self.setWindowIcon(QtGui.QIcon(scriptDir + os.path.sep + "icon_64.bmp"))
+        self.setWindowIcon(icon)
 
         # Создаём холст matplotlib
         self._fig = plt.figure(figsize=(4, 3), dpi=72)
@@ -60,7 +67,7 @@ class LissajousWindow(qt.QMainWindow):
         # Первичное построение фигуры
         self.plot_lissajous_figure()
 
-        self.resize(650, 300)
+        self.resize(700, 300)
 
         self.plot_button.clicked.connect(self.plot_button_click_handler)
         self.save_button.clicked.connect(self.save_button_click_handler)
@@ -76,6 +83,8 @@ class LissajousWindow(qt.QMainWindow):
         settings["freq_y"] = float(self.freq_y_lineedit.text())
         settings["color"] = mpl_color_dict[self.color_combobox.currentText()]
         settings["width"] = int(self.width_combobox.currentText())
+        settings["resolution"] = int(self.resolution_lineedit.text())
+        settings["phase_shift"] = float(self.phase_shift_lineedit.text())
 
         # Перестраиваем график
         self.plot_lissajous_figure(settings)
@@ -89,9 +98,11 @@ class LissajousWindow(qt.QMainWindow):
             line.remove()
 
         # Генерируем сигнал для построения
-        self.generator = LissajousGenerator()
+        self.generator = LissajousGenerator(resolution=settings["resolution"])
+        figure = lissajous_figure([0, 1, 2, 3], [0, 2, 1, 3])
         figure = self.generator.generate_figure(settings["freq_x"],
-                                                settings["freq_y"])
+                                                settings["freq_y"],
+                                                settings["phase_shift"])
 
         # Строим график
         self._ax.plot(figure.x_arr, figure.y_arr,
@@ -114,13 +125,28 @@ class LissajousWindow(qt.QMainWindow):
 
         if file_path == "":
             return
-
-        raise NotImplementedError("Тут всего одной строчки не хватает.")
+        
+        error_message = f"Файл {file_path} создан успешно."
+        try:
+            plt.savefig(file_path)
+        except PermissionError:
+            error_message = f"Невозможно создать файл {file_path}: в доступе отказано."
+            print(error_message)
+        except Exception as e:
+            error_message = f"Непредусмотренная ошибка: {str(e)}"
+            print(e)
+        finally:
+            msg = qt.QMessageBox()
+            msg.setText(error_message)
+            msg.exec()
+            print(error_message)
+        #raise NotImplementedError("Тут всего одной строчки не хватает.")
 
 
 if __name__ == "__main__":
     # Инициализируем приложение Qt
     app = qt.QApplication(sys.argv)
+    ##app.setAttribute(QtCore.qt.AA_EnableHighDpiScaling)
 
     # Создаём и настраиваем главное окно
     main_window = LissajousWindow()
@@ -132,5 +158,6 @@ if __name__ == "__main__":
     # На этой строке выполнение основной программы блокируется
     # до тех пор, пока пользователь не закроет окно.
     # Вся дальнейшая работа должна вестись либо в отдельных потоках,
-    # либо в обработчиках событий Qt.
+    # либо в обработчиках событиt Qt.
+    #app.exec_()
     sys.exit(app.exec_())
