@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import os
 import PyQt5.QtWidgets as qt
@@ -6,6 +7,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
 import json
+import locale
 
 from lissajousgen import LissajousGenerator, lissajous_figure
 
@@ -22,7 +24,7 @@ default_settings = {
 
 
 # Цвета для matplotlib
-with open("mpl.json", mode="r") as f:
+with open("mpl.json", mode="r", encoding="utf-8") as f:
     mpl_color_dict = json.load(f)
 
 
@@ -78,10 +80,10 @@ class LissajousWindow(qt.QMainWindow):
         """
         # Получаем данные из текстовых полей
         settings = {}
-
+        color = self.color_combobox.currentText()
         settings["freq_x"] = float(self.freq_x_lineedit.text())
         settings["freq_y"] = float(self.freq_y_lineedit.text())
-        settings["color"] = mpl_color_dict[self.color_combobox.currentText()]
+        settings["color"] = mpl_color_dict[color]
         settings["width"] = int(self.width_combobox.currentText())
         settings["resolution"] = int(self.resolution_lineedit.text())
         settings["phase_shift"] = float(self.phase_shift_lineedit.text())
