@@ -7,3 +7,8 @@ __pycache__/
 .venv
 venv/
 venv.bak/
+build/
+dist/
+package/
+*.deb
+*.zip
